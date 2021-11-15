@@ -1,5 +1,8 @@
-$employees = ["직원A", "직원B", "직원C"]
-$basePays = [400, 300, 250]
+$employees = ["직원A", "직원B", "직원C", "아르바이트D", "아르바이트E", "아르바이트F"]
+$basePays = [400, 300, 250, 1, 1, 1.5]
+$hourlys = [false, false, false, true, true, true] # 정직원과 알바를 구분하는 전역변수
+$timeCards = [0, 0, 0, 120, 120, 120] # 알바의 급여를 계산하기 위한 한달 간의 업무 누적 시간
+
 def main(operation, args={})
     case(operation)
     when :pay then calculatePay(args[:name])
@@ -9,7 +12,11 @@ end
 
 def calculatePay(name) # 하향식 프로그래밍의 단점을 수정하기 위한 함수 (기존의 메인 함수의 로직이 이곳으로 이전했다.)
     taxRate = getTaxRate() # 사용자로부터 소득 세율을 입력받는다.
-    pay = calculatePayFor(name, taxRate) # 직원의 급여를 계산한다.
+    if (hourly?(name)) then 
+        pay = calculateHourlyPayFor(name, taxRate)
+    else
+        pay = calculatePayFor(name, taxRate) # 직원의 급여를 계산한다.
+    end
     puts(describeResult(name, pay)) # 양식에 맞게 결과를 출력한다.
 end
 
@@ -36,10 +43,24 @@ end
 =end
 def sumOfBasePays() 
     result = 0
-    for basePay in $basePays
-        result += basePay
+    for name in $employees
+        if (not hourly?(name)) then
+            result += $basePays[$employees.index(name)]
+        end
     end
     puts(result)
+end
+
+# 알바 급여 계산
+def calculateHourlyPayFor(name, taxRate)
+    index = $employees.index(name)
+    basePay = $basePays[index] * $timeCards[index]
+    return basePay - (basePay * taxRate)
+end
+
+# 정직원과 알바 직원 판단 함수. 알바이면 true 반환.
+def hourly?(name)
+    return $hourlys[$employees.index(name)]
 end
 
 # 기본급의 총합 구하기
